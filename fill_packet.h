@@ -19,17 +19,19 @@ typedef struct
 	struct ip ip_hdr;
 	u8 ip_option[8];
 	struct icmphdr icmp_hdr;
-	u8 data[0];
+	u8 data[10];
 } myicmp ;
 
 void 
-fill_iphdr ( struct ip *ip_hdr, const char* dst_ip);
+fill_iphdr ( struct ip *ip_hdr, const char* src_ip, const char* dst_ip);
 
 void
-fill_icmphdr (struct icmphdr *icmp_hdr);
+fill_icmphdr (struct icmphdr *icmp_hdr, pid_t pid, int countseq);
 
 u16
 fill_cksum ( struct icmphdr *icmp_hdr);
+
+unsigned short in_cksum(unsigned short *addr, int len);
  
 #endif
  

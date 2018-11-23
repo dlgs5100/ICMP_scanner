@@ -15,6 +15,7 @@
 
 
 pid_t pid;
+int countseq;
 
 void usage();
 char* get_locol_IP(char *iface);
@@ -26,12 +27,15 @@ int main(int argc, char* argv[])
 	
 	
 	pid = getpid();
+	countseq = 0;
 	struct sockaddr_in dst;
 	in_addr_t target_ip;
 	myicmp *packet = (myicmp*)malloc(PACKET_SIZE);
 	int count = DEFAULT_SEND_COUNT;
 	int timeout = DEFAULT_TIMEOUT;
 	
+	char *ID = calloc(10, sizeof(char));
+	strcpy(ID, "M073040009");
 
 	if(geteuid() != 0)
 		printf("ERROR: You must be root to use this tool!\n");
@@ -40,7 +44,8 @@ int main(int argc, char* argv[])
 			usage();
 		else{
 			int i, j;
-			char *local_IP = get_locol_IP(argv[2]);
+			char *local_IP = calloc(16, sizeof(char));
+			strcpy(local_IP, get_locol_IP(argv[2]));
 			char temp_IP[16];	//copy for slice
 			int ip_Subnet[4];
 			char *destination_IP;
@@ -52,14 +57,22 @@ int main(int argc, char* argv[])
 			for(i=1; i<4; i++)
 				ip_Subnet[i] = atoi(strtok(NULL, "."));
 
-			for(i=1; i<2; i++){		//subnet4
+			for(i=1; i<6; i++){		//subnet4
+				countseq++;
 				destination_IP = calloc(16, sizeof(char));
 				for(j=0; j<3; j++){
 					strcat(destination_IP, int2str(ip_Subnet[j]));
 					strcat(destination_IP, ".");
 				}
 				strcat(destination_IP, int2str(i));
-				printf("%s\n", destination_IP);
+				// strcpy(destination_IP, "140.117.169.67");
+				// printf("%s\n", destination_IP);
+
+				timeout = atoi(argv[4]);
+
+				bzero(&dst, sizeof(dst));
+				dst.sin_family = AF_INET;
+				dst.sin_addr.s_addr = inet_addr(destination_IP);
 
 				pcap_init(destination_IP, timeout);
 
@@ -73,13 +86,15 @@ int main(int argc, char* argv[])
 					exit(1);
 				}
 
-				// *   Use "sendto" to send packets, and use "pcap_get_reply"(in pcap.c) 
-					//  or use the standard socket like the one in the ARP homework
-			 	//  *   to get the "ICMP echo response" packets 
-				 // *	 You should reset the timer every time before you send a packet.
+				
 				
 
-				fill_iphdr(&(packet->ip_hdr), destination_IP);
+				fill_iphdr(&(packet->ip_hdr), local_IP, destination_IP);
+				fill_icmphdr(&(packet->icmp_hdr), pid, countseq);
+				memcpy(packet->data, ID, sizeof(packet->data));
+				(packet->icmp_hdr).checksum = fill_cksum(&(packet->icmp_hdr));
+
+				printf("Ping %s (data size = %d, id = 0x%x, seq = %d, timeout = %d ms)\n",destination_IP, sizeof(packet->data), pid, countseq, timeout);
 				if(sendto(sockfd, packet, PACKET_SIZE, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0){
 						perror("sendto");
 						exit(1);
@@ -88,15 +103,6 @@ int main(int argc, char* argv[])
 				free(destination_IP);
 			}
 			
-
-				
-				 
-	
-				
-				
-
-				// free(packet);
-			// }
 		}
 			
 	}
