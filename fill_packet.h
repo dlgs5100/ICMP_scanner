@@ -19,7 +19,7 @@ typedef struct
 	struct ip ip_hdr;
 	u8 ip_option[8];
 	struct icmphdr icmp_hdr;
-	u8 data[10];
+	u8 data[ICMP_DATA_SIZE];
 } myicmp ;
 
 void 

@@ -77,18 +77,37 @@ void pcap_init( const char* dst_ip ,int timeout )
 }
 
 
-int pcap_get_reply( void )
+int pcap_get_reply()
 {
-	const u_char *ptr;
-
-	ptr = pcap_next(p, &hdr);
-	
-	/*
-	 * google "pcap_next" to get more information
-	 * and check the packet that ptr pointed to.
-	 */
-	
-	
-	
-	return 0;
+	// const u_char *ptr;
+	// u_int16_t id;
+	// u_int16_t seq;
+	// struct in_addr gwip,dstip;
+	// ptr = pcap_next(p, &hdr);
+	// if (ptr == NULL)
+	// {
+	// 	printf("No packets\n");
+	// 	return -1;
+	// }
+	// memcpy(&gwip, ptr+37,4);
+	// memcpy(&dstip,ptr+26,4);
+	// memcpy(&id, ptr+46, 2);
+	// memcpy(&seq, ptr+48, 2);
+	// if(id != htons(pid))
+	// {
+	// 	printf("identifier error\n");
+	// 	exit(1);
+	// }
+	// if(seq != htons(countseq))
+	// {
+	// 	printf("sequence error\n");
+	// 	exit(1);
+	// }
+	// printf("Reply from %s: time = %0.3fms\n",inet_ntoa(dstip),hdr.ts.tv_usec/1000000.0);
+	// printf("\tRoute: %s\n",inet_ntoa(gwip));
+	// /*
+	//  * google "pcap_next" to get more information
+	//  * and check the packet that ptr pointed to.
+	//  */	
+	// return 0;
 }

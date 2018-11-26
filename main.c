@@ -96,9 +96,12 @@ int main(int argc, char* argv[])
 
 				printf("Ping %s (data size = %d, id = 0x%x, seq = %d, timeout = %d ms)\n",destination_IP, sizeof(packet->data), pid, countseq, timeout);
 				if(sendto(sockfd, packet, PACKET_SIZE, 0, (struct sockaddr *)&dst, sizeof(dst)) < 0){
-						perror("sendto");
-						exit(1);
+					perror("sendto");
+					exit(1);
 				}
+				// if(pcap_get_reply()== -1){
+				// 	printf("Reply from : %s , time = *\n", destination_IP);
+				// }
 
 				free(destination_IP);
 			}
