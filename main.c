@@ -21,7 +21,6 @@ int countseq;
 void usage();
 char* get_locol_IP(char *iface);
 char* int2str(int num);
-// unsigned long GetTickCount();
 int main(int argc, char* argv[])
 {
 	int sockfd;
@@ -54,7 +53,7 @@ int main(int argc, char* argv[])
 
 			strcpy(temp_IP, local_IP);
 			
-
+			// local ip slicing
 			ip_Subnet[0] = atoi(strtok(temp_IP, "."));
 			for(i=1; i<4; i++)
 				ip_Subnet[i] = atoi(strtok(NULL, "."));
@@ -69,17 +68,20 @@ int main(int argc, char* argv[])
 				perror("setsockopt");
 				exit(1);
 			}
-			for(i=1; i<20; i++){		//subnet4
+			//1~254
+			for(i=1; i<255; i++){		//subnet4
 				countseq++;
 				destination_IP = calloc(16, sizeof(char));
+				// merge as destination IP
 				for(j=0; j<3; j++){
+					
 					strcat(destination_IP, int2str(ip_Subnet[j]));
 					strcat(destination_IP, ".");
 				}
 				strcat(destination_IP, int2str(i));
-				// strcpy(destination_IP, "140.117.169.67");
-				// printf("%s\n", destination_IP);
 
+				if (!strcmp(destination_IP, local_IP))
+					continue;
 
 				timeout = atoi(argv[4]);
 
@@ -89,6 +91,7 @@ int main(int argc, char* argv[])
 
 				pcap_init(destination_IP, timeout);
 
+				// fill icmp packet
 				fill_iphdr(&(packet->ip_hdr), local_IP, destination_IP);
 				fill_icmphdr(&(packet->icmp_hdr), pid, countseq);
 				memcpy(packet->data, ID, sizeof(packet->data));
@@ -96,6 +99,7 @@ int main(int argc, char* argv[])
 
 				printf("Ping %s (data size = %d, id = 0x%x, seq = %d, timeout = %d ms)\n",destination_IP, sizeof(packet->data), pid, countseq, timeout);
 
+				//timer start
 				struct timeval tv;
 				gettimeofday(&tv, NULL);
 				long int sendTime = tv.tv_sec*1000+tv.tv_usec/100;
@@ -108,29 +112,27 @@ int main(int argc, char* argv[])
 				int recvlen;
 				myicmp rcv_pak;
 				int ret;
-				struct timeval delay = {timeout, 0};
 
 				if((sockfd_recv = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0){
 					perror("open recv socket error");
 					exit(1);
 				}
-				if(ret = setsockopt(sockfd_recv, SOL_SOCKET, SO_RCVTIMEO, &delay, sizeof(delay)) < 0){
-					perror("timeout setting error");
-					exit(1);
-				}
+
 				if((recvlen = recvfrom( sockfd_recv, (void *)&rcv_pak, sizeof(rcv_pak), 0, NULL, NULL))<0){	
 					perror("recvfrom");
 					exit(1);
 				}
 
+				//timer end
 				gettimeofday(&tv, NULL);
 				long int recvTime = tv.tv_sec*1000+tv.tv_usec/100;
 				long int RTT = recvTime-sendTime;
-				if(RTT < timeout)
+				if(RTT < timeout && rcv_pak.icmp_hdr.type == htons(0))
 					printf("Reply from : %s , time : %ld ms\n", destination_IP, recvTime-sendTime);
 				else
 					printf("Destination unreachable\n");
 
+				fflush(stdout);
 				free(destination_IP);
 			}
 			
@@ -147,7 +149,6 @@ void usage(){
 char* get_locol_IP(char *iface){
 	int fd;
 	struct ifreq ifr;
-	// char *iface = "enp0s3";
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
 	ifr.ifr_addr.sa_family = AF_INET;
@@ -163,8 +164,3 @@ char* int2str(int num){
 	sprintf(str, "%d", num);
 	return str;
 }
-// unsigned long GetTickCount(){
-// 	struct timespec ts;
-// 	clock_gettime(CLOCK_MONOTONIC, &ts);
-// 	return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
-// }
