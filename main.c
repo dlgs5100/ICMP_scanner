@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 				dst.sin_family = AF_INET;
 				dst.sin_addr.s_addr = inet_addr(destination_IP);
 
-				pcap_init(destination_IP, timeout);
+				// pcap_init(destination_IP, timeout);
 
 				// fill icmp packet
 				fill_iphdr(&(packet->ip_hdr), local_IP, destination_IP);
